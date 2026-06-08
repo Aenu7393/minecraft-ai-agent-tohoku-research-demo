@@ -1,5 +1,5 @@
 # minecraft-ai-agent-tohoku-research-demo
-# Minecraft AI Agent Research Demo
+[日本語版はこちら](./README_ja.md)
 
 ## Overview
 
