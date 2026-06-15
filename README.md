@@ -1,119 +1,49 @@
 # minecraft-ai-agent-tohoku-research-demo
 [日本語版はこちら](./README_ja.md)
 
-## Overview
+## 1. Overview
 
-This repository is a public demo version of my research project on an autonomous AI agent in Minecraft.
+This repository is a public demo version of a research project on an autonomous AI agent that operates inside Minecraft.
 
-The goal of this project is to build an agent that can understand the current game situation, decompose a high-level goal into executable subgoals, execute actions, store experiences, and recover from failures.
+The goal of this research is to build a system in which an agent can understand the current game situation, decompose high-level goals into executable subgoals, execute actions, store experiences in memory, and recover from failures.
 
-This project focuses not only on using an LLM for planning, but also on designing a memory-based agent architecture inspired by human memory systems.
+In particular, this project focuses not only on using LLMs for planning, but also on visual state understanding with VLMs, a memory-based agent architecture inspired by human memory systems, and a mechanism for cognitive monitoring, correction, interruption, and replanning during low-level action execution.
 
-## Research Motivation
+## 2. Research Background
 
-Large Language Models can generate high-level plans, but they often struggle to ground those plans in the actual environment.
+Large Language Models can generate high-level task plans. For example, given the goal "make a stone pickaxe," an LLM can generate a subgoal sequence such as "collect wood," "craft planks," "craft sticks," "make a wooden pickaxe," and "mine cobblestone."
 
-For example, even if an LLM can generate a plan such as:
+However, simply generating a subgoal sequence is not enough to complete tasks in an actual Minecraft environment. The agent must consider its current inventory, nearby blocks, visual situation, enemies or obstacles, subgoal executability, failure reasons, and past experiences.
 
-```text
-collect wood -> craft planks -> craft sticks -> craft pickaxe
-```
+Therefore, this research explores an agent architecture that combines LLM-based planning with state representation, visual understanding, memory, failure recovery, and cognitive intervention in low-level actions.
 
-the agent still needs to understand:
+## 3. Research Positioning
 
-* what items it currently has
-* what blocks are nearby
-* whether the current subgoal is executable
-* why an action failed
-* how to recover from the failure
-* which past experiences can be reused
+In recent years, hierarchical agents that combine LLM-based high-level planning with low-level action control based on reinforcement learning or imitation learning have been studied in open-world environments such as Minecraft.
 
-To address this problem, this project aims to combine LLM-based planning with memory, state representation, and failure recovery mechanisms.
+In many existing approaches, an LLM decomposes a task into subgoals or skill sequences, while a low-level policy executes concrete actions such as moving, mining, and crafting.
 
-## Key Idea
+However, after the high-level module determines a subgoal, the problem of continuously monitoring whether the low-level policy is moving toward the goal during execution, and correcting, interrupting, or replanning when necessary, has not yet been sufficiently explored.
 
-This project is inspired by the structure and functions of human memory.
+This research focuses on this point. Instead of treating low-level actions as a simple execution module, this project aims to build an architecture in which LLMs and VLMs cognitively intervene in ongoing actions through observation, reasoning, prediction, and memory retrieval.
 
-Human memory is not a single storage system. It consists of multiple types of memory, such as short-term memory, working memory, long-term memory, episodic memory, semantic memory, and procedural memory.
+This idea is inspired by the relationship between unconscious motor control and conscious attention or reasoning in humans. Humans often walk, look around, and approach objects unconsciously, but when they get stuck, lose sight of the target, or notice danger, conscious reasoning intervenes and modifies the behavior.
 
-In this project, I apply this idea to an autonomous Minecraft agent.
+## 4. Main Ideas
 
-The agent uses different types of memory for different purposes:
+The core ideas of this project are the following three points:
 
-* **Working Memory**
-  Stores the current goal, current subgoal, current state, and recent execution context.
+1. High-level goal decomposition using LLMs
+2. Situation understanding using VLMs, state observation, and memory
+3. Cognitive intervention during low-level action execution
 
-* **Episodic Memory**
-  Stores past experiences such as successful actions, failed actions, and the context in which they occurred.
+The agent decomposes a user-given goal into a sequence of subgoals and executes each subgoal. However, the agent does not simply execute the subgoals in order. During execution, it observes the current state and judges whether the ongoing behavior is aligned with the goal.
 
-* **Semantic Memory**
-  Stores general knowledge such as crafting recipes, item relationships, and task dependencies.
+If the agent loses sight of the target, stops making progress, encounters danger, finds a similar past failure, or determines that the current subgoal is difficult to execute, an LLM/VLM-based cognitive module corrects, interrupts, or replans the behavior.
 
-* **Procedural Memory**
-  Stores executable skills and action procedures, such as collecting wood, crafting items, mining blocks, and placing blocks.
+## 5. Cognitive Intervention Architecture
 
-* **Repair Memory**
-  Stores past failure cases and recovery strategies so that the agent can reuse them when similar failures occur.
-
-By separating memory into multiple roles, the agent can make decisions more structurally instead of relying only on direct LLM output.
-
-## Current Approach
-
-In the earlier version of this project, the agent used Mineflayer to obtain structured state information from Minecraft.
-
-For example, the agent could obtain information such as:
-
-* inventory
-* position
-* nearby blocks
-* health
-* current task
-* execution result
-
-This structured state was used as a state vector for planning, execution, and failure recovery.
-
-However, Mineflayer-based state representation has limitations. It can represent symbolic information, but it does not fully capture the visual situation of the game world.
-
-For example, it may be difficult to understand the surrounding environment, spatial layout, terrain, obstacles, and object relationships only from symbolic state values.
-
-Therefore, I am currently extending the system to use Minecraft screen images as part of the state representation.
-
-## Visual State Representation
-
-The current development direction is to obtain visual information from Minecraft screenshots and convert it into a state vector.
-
-This visual state vector can be used for:
-
-* understanding the current environment more accurately
-* supporting lightweight decision making
-* detecting environmental changes
-* improving subgoal execution
-* helping the agent reflect on failures
-* modifying subgoals when the current plan does not work
-
-Instead of relying only on text-based or symbolic state information, the agent aims to use visual information to better understand the game situation.
-
-## Non-Associative Learning
-
-I am also interested in applying concepts from non-associative learning to the agent.
-
-In particular, I am considering the use of **habituation**.
-
-In human learning, habituation refers to the process of gradually reducing attention or response to repeated stimuli that are not important.
-
-I want to apply this idea to visual state understanding.
-
-For example, if the agent repeatedly observes the same unimportant visual information, it should not focus on it every time. Instead, the agent should gradually reduce attention to familiar and unimportant information, and focus more on novel, uncertain, or task-relevant parts of the environment.
-
-This idea may help the agent:
-
-* reduce unnecessary observation cost
-* focus on important visual changes
-* improve failure reflection
-* decide where to observe more carefully
-* update subgoals based on meaningful environmental changes
-
-## Architecture
+This research explores an architecture in which LLMs and VLMs can intervene during low-level policy or skill execution.
 
 ```text
 User Goal
@@ -124,32 +54,130 @@ Subgoal Queue
    ↓
 Meta Controller
    ↓
-Executor
+Executor / Low-Level Policy
    ↓
 Minecraft Agent
 ```
 
-The agent also uses memory and state representation during planning, execution, and failure recovery.
+During execution, the Cognitive Monitor observes the current behavior based on state information obtained from the Minecraft Agent.
 
 ```text
+Minecraft Agent
+   ↓
 State Observer
-   ├── Symbolic State from Mineflayer
-   └── Visual State from Minecraft Screenshots
-
-Memory System
-   ├── Working Memory
-   ├── Episodic Memory
-   ├── Semantic Memory
-   ├── Procedural Memory
-   └── Repair Memory
+   ├── Symbolic state obtained from Mineflayer
+   └── Visual state obtained from Minecraft screenshots
+   ↓
+Cognitive Monitor
+   ├── VLM: Understanding the current visual situation
+   ├── LLM: Judging consistency with the goal
+   ├── World Model: Predicting action outcomes
+   └── Memory System: Retrieving similar past experiences
+   ↓
+Intervention Controller
+   ├── continue: Continue the current action
+   ├── correct: Correct view direction, movement, or exploration strategy
+   ├── interrupt: Interrupt the current action
+   └── replan: Modify or replan the subgoal
+   ↓
+Executor / Low-Level Policy
 ```
 
-## Example Task
+In this architecture, the low-level policy is responsible for concrete operations such as movement, camera control, mining, attacking, using items, and crafting. On the other hand, LLMs and VLMs do not directly decide every low-level operation. Instead, they monitor the execution state and provide guidance signals or correction policies when necessary.
+
+## 6. Memory System
+
+This project designs the agent's memory system by referring to the types and functions of human memory.
+
+The agent aims not only to temporarily store the current state and recent actions, but also to organize important experiences and save them as reusable long-term knowledge.
+
+```text
+Memory System
+├── Working Memory
+│   └── Current goal, subgoal, state, and recent execution status
+│
+├── Intermediate Memory
+│   └── Temporary storage for recent experiences before transferring important information to long-term memory
+│
+└── Long-Term Memory
+    ├── Declarative Memory
+    │   ├── Episodic Memory
+    │   │   └── Past experiences, state information, failures, and reflections
+    │   └── Semantic Memory
+    │       └── Crafting recipes, item relationships, and task dependencies
+    │
+    └── Non-Declarative Memory
+        ├── Associative Learning
+        ├── Non-Associative Learning
+        ├── Priming
+        ├── Procedural Memory
+        └── Emotional Conditioning
+```
+
+## 7. Transition from Intermediate Memory to Long-Term Memory
+
+In this project, not all experiences are directly stored in long-term memory. Instead, experiences are first stored in intermediate memory, and only important information is transferred to long-term memory.
+
+Examples of candidates for long-term memory include:
+
+* Repeated failures
+* Effective repair strategies
+* Knowledge reusable across different tasks
+* Visual information important for task completion
+* Situations strongly associated with danger or success
+* Relationships between specific actions and results
+
+```text
+Current state / experience
+   ↓
+Working Memory
+   ↓
+Intermediate Memory
+   ↓
+Evaluate importance, novelty, reusability, and failure frequency
+   ↓
+Long-Term Memory
+```
+
+## 8. State Representation
+
+In earlier versions, the agent obtained structured state information from Minecraft using Mineflayer.
+
+For example, inventory, position, nearby blocks, health, current task, and execution results were used as state representations for planning, execution, and failure recovery.
+
+However, state representations obtained through Mineflayer are mainly symbolic and cannot fully represent the visual situation of the entire game screen.
+
+Therefore, the current direction is to extend the state representation by using Minecraft screenshots as part of the agent's visual state.
+
+## 9. Image-Based State Representation
+
+Image-based state representation is expected to be used for the following purposes:
+
+* Understanding the current environment in more detail
+* Visually detecting targets and obstacles
+* Detecting environmental changes
+* Improving subgoal execution
+* Supporting reflection after failures
+* Modifying subgoals when the current plan does not work well
+
+By incorporating visual information instead of relying only on text-based or symbolic state information, this project aims to help the agent understand in-game situations more accurately.
+
+## 10. Application of Non-Associative Learning
+
+This research explores the application of habituation, a type of non-associative learning, to image-based state understanding.
+
+Habituation is a phenomenon in which responses or attention to repeated unimportant stimuli gradually decrease.
+
+In a Minecraft agent, this idea can be applied as a mechanism that reduces attention to repeatedly observed low-importance visual information and increases attention to novel, uncertain, or task-relevant regions.
+
+This is expected to reduce unnecessary observation costs while allowing the agent to focus on information needed for failure reflection and subgoal correction.
+
+## 11. Task Example
 
 Input goal:
 
 ```text
-Craft a stone pickaxe
+Make a stone pickaxe
 ```
 
 Example subgoal sequence:
@@ -165,41 +193,103 @@ mine_cobblestone
 craft_stone_pickaxe
 ```
 
-If one of these subgoals fails, the agent checks the current state and past failure cases, then tries to generate or reuse a repair strategy.
+If a failure occurs during one of these subgoals, the agent checks the current state, past failure cases, and visual state representation, then generates or reuses a repair strategy.
 
-## Features
+For example, if the agent loses sight of a tree while trying to chop it, the VLM checks the visual situation, the LLM judges consistency with the goal, and the Memory System retrieves similar past failures. Based on the result, the Intervention Controller may correct the camera direction, change the exploration strategy, interrupt the current subgoal, or replan another subgoal.
 
-* LLM-based goal decomposition
-* Subgoal-based task execution
-* State observation using Mineflayer
+## 12. Main Features
+
+* LLM-based goal decomposition into subgoals
+* Subgoal-level task execution
+* Symbolic state observation using Mineflayer
 * Visual state representation using Minecraft screenshots
-* Memory-inspired agent architecture
-* Episodic memory for past execution history
+* Cognitive monitoring during execution using LLMs/VLMs
+* Correction, interruption, and replanning of low-level actions
+* Action outcome prediction using a World Model
+* Memory architecture using working memory, intermediate memory, and long-term memory
+* Episodic memory for storing experiences, failures, and reflections
+* Semantic memory for crafting knowledge and task dependencies
 * Procedural memory for reusable skills
-* Repair memory for failure recovery
-* Meta-controller for deciding the next action mode
-* Future extension based on habituation in non-associative learning
+* Visual attention adjustment based on habituation in non-associative learning
+* Meta Controller for deciding the next action mode
+* Subgoal correction and reuse of repair strategies after failures
 
-## My Role
+## 13. Current Implementation Status
 
-I designed and implemented the overall architecture of the agent system.
+The current implementation includes two main approaches for building Minecraft agents.
 
-My main responsibilities include:
+### 13.1 Mineflayer-Based Agent
 
-* designing the memory-based agent architecture
-* implementing the planner and executor
-* implementing state observation
-* designing subgoal-based task execution
-* implementing failure recovery mechanisms
-* experimenting with visual state representation
-* exploring how human memory and learning mechanisms can be applied to autonomous agents
+The first approach is an agent based on Mineflayer.
 
-## Tech Stack
+In this architecture, the agent obtains the Minecraft state through Mineflayer, and the LLM Planner decomposes the user's high-level goal into executable subgoals.
+
+The Executor executes the generated subgoals in order and stores the success or failure of each subgoal, the current state, and failure reasons as episodic memory.
+
+For example, for the goal "make a stone pickaxe," the LLM Planner generates the following subgoal sequence and executes each action using Mineflayer.
+
+```text
+find_tree
+chop_tree
+craft_planks
+craft_crafting_table
+craft_sticks
+craft_wooden_pickaxe
+mine_cobblestone
+craft_stone_pickaxe
+```
+
+In this implementation, inventory, position, nearby blocks, health, current subgoal, and execution results are handled as symbolic state representations.
+
+When a failure occurs during execution, the agent refers to the current state and past failure cases, then generates a subgoal modification or repair strategy.
+
+### 13.2 STEVE-1-Based Agent
+
+The second approach uses STEVE-1, an existing research model, as the low-level action policy.
+
+STEVE-1 is a model that generates low-level actions in Minecraft based on text instructions. In this project, STEVE-1 is used as the low-level processing module, and an LLM Planner is connected above it.
+
+In this architecture, the LLM Planner decomposes the user's high-level goal into a sequence of subgoals. Each subgoal is then given to STEVE-1 as a text instruction, and STEVE-1 executes low-level actions in Minecraft based on the instruction.
+
+```text
+User Goal
+   ↓
+LLM Planner
+   ↓
+Subgoal Queue
+   ↓
+Text Instruction
+   ↓
+STEVE-1
+   ↓
+Low-level actions in Minecraft
+```
+
+For example, for the goal "make a stone pickaxe," the LLM Planner generates subgoals such as "find a tree," "chop a tree," "craft planks," "craft sticks," and "mine cobblestone." Each subgoal is then passed to STEVE-1, enabling execution down to the low-level action level.
+
+This implementation allows the project to examine not only API-based action execution with Mineflayer, but also an agent architecture that uses a visual-language-conditioned low-level action policy.
+
+## 14. Future Directions
+
+Future work includes the following directions:
+
+* Improving visual state understanding using VLMs
+* Designing guidance signals for low-level policies
+* Integrating reinforcement learning policies with cognitive intervention modules
+* Introducing a World Model for executability prediction
+* Improving failure recovery using memory retrieval
+* Implementing criteria for transferring information from intermediate memory to long-term memory
+* Experimenting with visual attention control based on habituation
+* Applying the architecture to longer-horizon Minecraft tasks
+
+## 15. Technologies Used
 
 * JavaScript / Node.js
 * Mineflayer
 * Minecraft
 * LLM API
+* VLM
+* STEVE-1
 * JSON-based memory system
-* Visual state representation
-
+* Image-based state representation
+* Reinforcement learning / imitation learning-based low-level policies
